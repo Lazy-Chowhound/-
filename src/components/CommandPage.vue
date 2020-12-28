@@ -33,14 +33,23 @@ export default {
       const array = this.command.split('\n');
       this.$axios.post('http://localhost:8090/test', qs.stringify({
         command: array[array.length - 2]
-      })).then(res => {
+      }), {timeout: 2000}).then(res => {
         this.command = this.command.concat('> ').concat(res.data).concat('\n');
       }).catch(error => {
-        console.log(error);
+        this.$message({
+          message: error,
+          type: 'error',
+          showClose:true
+        });
       })
     },
     clearAll() {
       this.command = "";
+      this.$notify({
+        title: '清除成功',
+        type: 'success',
+        offset: 50
+      });
     }
   }
 }
