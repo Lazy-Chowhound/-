@@ -3,8 +3,9 @@
     <el-collapse-transition>
       <div v-show="show">
         <div class="main">
-          <el-input type="textarea" class="commandBoard" rows="20" v-model="command" resize="none"
-                    v-on:keyup.enter.native="sendCommand" v-on:keydown.delete.stop="banDelete($event)"></el-input>
+          <el-input type="textarea" ref="input" class="commandBoard" rows="20" v-model="command" resize="none"
+                    v-on:keydown.delete.stop="banDelete($event)" v-loading="loading" ></el-input>
+          <el-button type="primary" v-on:click="sendCommand" icon="el-icon-thumb" :loading="loading">开始配置</el-button>
           <el-button type="primary" v-on:click="clearAll" icon="el-icon-remove-outline">清除所有</el-button>
         </div>
       </div>
@@ -15,34 +16,53 @@
 
 <script>
 
-import * as qs from "qs";
-
 export default {
   name: "index",
   data() {
     return {
       show: true,
+      loading: false,
       command: "",
+      commandList: [
+        {command: "命令1"},
+        {command: "命令2"},
+        {command: "命令3"},
+      ]
     }
   },
   methods: {
     banDelete($event) {
       $event.preventDefault();
     },
-    sendCommand() {
-      const array = this.command.split('\n');
-      this.$axios.post('http://localhost:8090/test', qs.stringify({
-        command: array[array.length - 2]
-      }), {timeout: 2000}).then(res => {
-        this.command = this.command.concat('> ').concat(res.data).concat('\n');
+    async sendCommand() {
+      this.loading = true;
+      await this.$axios.get('http://172.19.166.52:8080/gettelnet', {timeout: 100000}).then(res => {
+        console.log(res.data);
+        this.loading = false;
+        this.$notify({
+          title: '配置成功',
+          type: 'success',
+          offset: 50
+        });
+        this.command = this.command.concat(res.data['results']);
       }).catch(error => {
         this.$message({
           message: error,
+
           type: 'error',
-          showClose:true
+          showClose: true
         });
       })
     },
+    // async startConfigure() {
+    //   let i = 0;
+    //   for (i = 0; i < this.commandList.length; i++) {
+    //     const curCommand = this.commandList[i]["command"];
+    //     this.command = this.command.concat(curCommand).concat("\n");
+    //     await this.sendCommand();
+    //     this.command = this.command.concat("\n");
+    //   }
+    // },
     clearAll() {
       this.command = "";
       this.$notify({
