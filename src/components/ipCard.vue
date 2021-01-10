@@ -1,6 +1,6 @@
 <template>
-  <el-card class="box-card">
-    <div slot="header">
+  <el-card class="box-card" :body-style="bodystyle">
+    <div slot="header" style="margin-left: 235px">
       <span>{{ name }}</span>
       <el-button style="float: right; padding: 3px 0" type="text" v-on:click="modify">确认修改</el-button>
     </div>
@@ -29,6 +29,7 @@ export default {
       part2: '',
       part3: '',
       part4: '',
+      bodystyle:{"padding": '20px',"height":"120px","display":"flex","align-items":"center"}
     }
   },
   methods: {
@@ -75,6 +76,10 @@ export default {
 </script>
 
 <style scoped>
+.box-card{
+  height:230px;
+}
+
 .item {
   display: flex;
   height: 90px;
@@ -95,9 +100,5 @@ export default {
 
 .ip {
   width: 100px;
-}
-
-.ip /deep/ .el-input__inner{
-  text-align: center;
 }
 </style>

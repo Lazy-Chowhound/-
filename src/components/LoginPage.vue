@@ -84,12 +84,7 @@ export default {
 
 
 <style scoped>
-.el-container {
-  text-align: center;
-}
-
 .el-header, .el-footer {
-
   text-align: center;
   line-height: 60px;
 }

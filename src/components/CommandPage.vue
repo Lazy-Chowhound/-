@@ -3,9 +3,12 @@
     <div v-show="show">
       <el-container class="container">
         <el-aside class="asideArea" width="600px">
+          <div class="topologyArea">
+            <img class="topology" alt="拓扑图.jpg" src="../assets/topology.png">
+          </div>
           <div class="configurationArea">
 
-            <el-tabs type="border-card" :stretch="true">
+            <el-tabs class="tabs" type="border-card" :stretch="true">
               <el-tab-pane>
                 <span slot="label"><i class="el-icon-s-tools"></i>路由器A</span>
                 <ipcard name="路由器A"></ipcard>
@@ -14,18 +17,13 @@
                 <span slot="label"><i class="el-icon-s-tools"></i>路由器B</span>
                 <ipcard name="路由器B"></ipcard>
               </el-tab-pane>
-              <el-tab-pane label="验证">
-                <span slot="label"><i class="el-icon-info"></i>验证</span>
-                <el-card class="box-card">
-                  <div slot="header">验证</div>
-                  <div class="item">验证</div>
-                </el-card>
+              <el-tab-pane>
+                <span slot="label"><i class="el-icon-upload"></i>交换机</span>
+                <upload-card></upload-card>
               </el-tab-pane>
-              <el-tab-pane label="待定">
-                <el-card class="box-card">
-                  <div slot="header">待定</div>
-                  <div class="item">待定</div>
-                </el-card>
+              <el-tab-pane>
+                <span slot="label"><i class="el-icon-upload"></i>中心路由器</span>
+                <upload-card></upload-card>
               </el-tab-pane>
             </el-tabs>
 
@@ -43,6 +41,10 @@
             <div class="buttonArea">
               <el-button type="primary" v-on:click="sendCommand" icon="el-icon-thumb" :loading="loading">开始配置
               </el-button>
+              <el-button type="primary" v-on:click="ping" icon="el-icon-magic-stick" :loading="loading">ping
+              </el-button>
+              <el-button type="primary" v-on:click="down" icon="el-icon-sort-down" :loading="loading">down
+              </el-button>
               <el-button type="primary" v-on:click="clearAll" icon="el-icon-remove-outline">清除所有
               </el-button>
             </div>
@@ -55,11 +57,14 @@
 
 <script>
 import ipcard from "@/components/ipCard";
+import uploadCard from "@/components/uploadCard";
+
 
 export default {
   name: "index",
   components: {
-    ipcard
+    ipcard,
+    uploadCard
   },
   data() {
     return {
@@ -80,7 +85,6 @@ export default {
     async sendCommand() {
       this.loading = true;
       await this.$axios.get('http://localhost:8080/test', {timeout: 1000 * 60 * 60}).then(res => {
-        console.log(res.data);
         this.loading = false;
         this.$notify({
           title: '配置成功',
@@ -94,6 +98,20 @@ export default {
           type: 'error',
           showClose: true
         });
+      })
+    },
+    ping() {
+      this.$axios.get('', {timeout: 1000 * 60 * 60}).then(res => {
+        console.log(res);
+      }).catch(error => {
+        console.log(error);
+      })
+    },
+    down() {
+      this.$axios.get('', {timeout: 1000 * 60 * 60}).then(res => {
+        console.log(res);
+      }).catch(error => {
+        console.log(error);
       })
     },
     // /**
@@ -125,19 +143,29 @@ export default {
 .container {
   align-items: center;
   justify-content: center;
+  height:570px;
 }
 
 .asideArea {
   margin-left: 50px;
 }
 
-.configurationArea {
-  margin: 0 auto;
+.topologyArea {
+  height: 150px;
+  text-align: center;
 }
 
-.box-card {
-  width: 565px;
-  height: 200px;
+.topology {
+  width: 370px;
+  height: 160px;
+}
+
+.configurationArea {
+  margin-top: 50px;
+}
+
+.tabs{
+  height:300px;
 }
 
 .loadingArea {
@@ -158,7 +186,7 @@ export default {
 }
 
 .buttonArea {
-  width: 400px;
+  width: 600px;
   margin-top: 20px;
   display: flex;
   justify-content: space-around;
