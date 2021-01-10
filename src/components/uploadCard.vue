@@ -4,7 +4,7 @@
       <el-upload class="upload-demo" drag action=" " multiple>
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-        <div class="el-upload__tip" slot="tip" style="font-size: 13px;margin-top: 3px">请上传.txt文件</div>
+        <div class="el-upload__tip" slot="tip" style="font-size: 13px;margin-top: 3px">请上传.txt配置文件</div>
       </el-upload>
     </div>
   </el-card>
