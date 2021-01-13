@@ -29,7 +29,7 @@ export default {
       part2: '',
       part3: '',
       part4: '',
-      bodystyle:{"padding": '20px',"height":"120px","display":"flex","align-items":"center"}
+      bodystyle:{"padding": '20px',"height":"160px","display":"flex","align-items":"center"}
     }
   },
   methods: {
@@ -77,12 +77,12 @@ export default {
 
 <style scoped>
 .box-card{
-  height:230px;
+  height:260px;
 }
 
 .item {
   display: flex;
-  height: 90px;
+  height: 140px;
   width: 530px;
   flex-direction: row;
   align-items: center;

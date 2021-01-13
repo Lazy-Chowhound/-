@@ -9,21 +9,21 @@
           <div class="configurationArea">
 
             <el-tabs class="tabs" type="border-card" :stretch="true">
-              <el-tab-pane>
-                <span slot="label"><i class="el-icon-s-tools"></i>路由器A</span>
-                <ipcard name="路由器A"></ipcard>
-              </el-tab-pane>
-              <el-tab-pane>
-                <span slot="label"><i class="el-icon-s-tools"></i>路由器B</span>
-                <ipcard name="路由器B"></ipcard>
-              </el-tab-pane>
+<!--              <el-tab-pane>-->
+<!--                <span slot="label"><i class="el-icon-s-tools"></i>路由器A</span>-->
+<!--                <ipcard name="路由器A"></ipcard>-->
+<!--              </el-tab-pane>-->
+<!--              <el-tab-pane>-->
+<!--                <span slot="label"><i class="el-icon-s-tools"></i>路由器B</span>-->
+<!--                <ipcard name="路由器B"></ipcard>-->
+<!--              </el-tab-pane>-->
               <el-tab-pane>
                 <span slot="label"><i class="el-icon-upload"></i>交换机</span>
-                <upload-card></upload-card>
+                <upload-card address=" "></upload-card>
               </el-tab-pane>
               <el-tab-pane>
                 <span slot="label"><i class="el-icon-upload"></i>中心路由器</span>
-                <upload-card></upload-card>
+                <upload-card address=" "></upload-card>
               </el-tab-pane>
             </el-tabs>
 
@@ -56,14 +56,14 @@
 </template>
 
 <script>
-import ipcard from "@/components/ipCard";
+// import ipcard from "@/components/ipCard";
 import uploadCard from "@/components/uploadCard";
 
 
 export default {
   name: "index",
   components: {
-    ipcard,
+    // ipcard,
     uploadCard
   },
   data() {
@@ -71,34 +71,66 @@ export default {
       show: true,
       loading: false,
       command: "",
-      commandList: [
-        {command: "命令1"},
-        {command: "命令2"},
-        {command: "命令3"},
-      ]
+      // commandList: [
+      //   {command: "命令1"},
+      //   {command: "命令2"},
+      //   {command: "命令3"},
+      // ]
     }
   },
   methods: {
     banDelete($event) {
       $event.preventDefault();
     },
-    async sendCommand() {
-      this.loading = true;
-      await this.$axios.get('http://localhost:8080/test', {timeout: 1000 * 60 * 60}).then(res => {
-        this.loading = false;
-        this.$notify({
-          title: '配置成功',
-          type: 'success',
-          offset: 50
+    sendCommand() {
+      const websocket = new WebSocket("ws://localhost:8090/socket");
+      const that = this;
+
+      websocket.onopen = function () {
+        that.command = that.command.concat("正  在  配  置 , 请 稍 候\n\n");
+        setTimeout(() => {
+          that.command = that.command.concat("---------Loading---------\n\n");
+        }, 1000)
+        setTimeout(() => {
+          websocket.send("");
+        }, 1000);
+      }
+
+      websocket.onmessage = function (event) {
+        that.command = that.command.concat(event['data']).concat("\n")
+      }
+
+      websocket.onclose = function () {
+
+      }
+
+      websocket.onerror = function () {
+        that.$notify.error({
+          title: '错误',
+          message: 'websocket无法建立连接'
         });
-        this.command = this.command.concat(res.data['results']);
-      }).catch(error => {
-        this.$message({
-          message: error,
-          type: 'error',
-          showClose: true
-        });
-      })
+      }
+
+      window.onbeforeunload = function () {
+        websocket.close();
+      }
+
+      // this.loading = true;
+      // await this.$axios.get('http://localhost:8080/test', {timeout: 1000 * 60 * 60}).then(res => {
+      //   this.loading = false;
+      //   this.$notify({
+      //     title: '配置成功',
+      //     type: 'success',
+      //     offset: 50
+      //   });
+      //   this.command = this.command.concat(res.data['results']);
+      // }).catch(error => {
+      //   this.$message({
+      //     message: error,
+      //     type: 'error',
+      //     showClose: true
+      //   });
+      // })
     },
     ping() {
       this.$axios.get('', {timeout: 1000 * 60 * 60}).then(res => {
@@ -143,7 +175,7 @@ export default {
 .container {
   align-items: center;
   justify-content: center;
-  height:570px;
+  height: 570px;
 }
 
 .asideArea {
@@ -151,7 +183,7 @@ export default {
 }
 
 .topologyArea {
-  height: 150px;
+  height: 120px;
   text-align: center;
 }
 
@@ -161,11 +193,11 @@ export default {
 }
 
 .configurationArea {
-  margin-top: 50px;
+  margin-top: 60px;
 }
 
-.tabs{
-  height:300px;
+.tabs {
+  height: 330px;
 }
 
 .loadingArea {
