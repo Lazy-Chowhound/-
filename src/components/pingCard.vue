@@ -6,7 +6,15 @@
     </div>
     <div class="item">
       <div class="sourceIpArea">
-        <div><span>A-ip:</span></div>
+        <span>源 IP</span>
+        <el-radio-group class="sourceOption" v-model="source">
+          <el-radio-button label="RTA"></el-radio-button>
+          <el-radio-button label="RTB"></el-radio-button>
+          <el-radio-button label="RTC"></el-radio-button>
+        </el-radio-group>
+      </div>
+      <div class="targetIpArea">
+        <div><span>目的IP:</span></div>
         <div class="ipInput">
           <el-input class="ip" v-model="part1"></el-input>
           <span>.</span>
@@ -17,25 +25,13 @@
           <el-input class="ip" v-model="part4"></el-input>
         </div>
       </div>
-      <div class="targetIpArea">
-        <div><span>B-ip:</span></div>
-        <div class="ipInput">
-          <el-input class="ip" v-model="part5"></el-input>
-          <span>.</span>
-          <el-input class="ip" v-model="part6"></el-input>
-          <span>.</span>
-          <el-input class="ip" v-model="part7"></el-input>
-          <span>.</span>
-          <el-input class="ip" v-model="part8"></el-input>
-        </div>
-      </div>
     </div>
   </el-card>
 </template>
 
 <script>
 export default {
-  name: "ipcard",
+  name: "pingCard",
   props: ['ip'],
   data() {
     return {
@@ -43,10 +39,7 @@ export default {
       part2: '',
       part3: '',
       part4: '',
-      part5: '',
-      part6: '',
-      part7: '',
-      part8: '',
+      source: '',
       bodyStyle: {"padding": '20px', "height": "160px", "display": "flex", "align-items": "center"}
     }
   },
@@ -56,11 +49,15 @@ export default {
       return !(ipPart === "" || isNaN(ip) || ip % 1 !== 0 || ip < 0 || ip > 255);
     },
     ping() {
-      if (this.checkIp(this.part1) && this.checkIp(this.part2) && this.checkIp(this.part3) && this.checkIp(this.part4)
-          && this.checkIp(this.part5) && this.checkIp(this.part6) && this.checkIp(this.part7) && this.checkIp(this.part8)) {
-        const sourceIp = this.getSourceIp;
+      if (this.source === '') {
+        this.$notify.error({
+          title: 'ping错误',
+          message: '未选择源IP',
+          position: 'top-right',
+          offset: 50
+        })
+      } else if (this.checkIp(this.part1) && this.checkIp(this.part2) && this.checkIp(this.part3) && this.checkIp(this.part4)) {
         const targetIp = this.getTargetIp;
-
         this.$confirm("是否确认ping", "提示", {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
@@ -73,7 +70,7 @@ export default {
 
           websocket.onopen = function () {
             setTimeout(() => {
-              websocket.send("ping," + sourceIp + "," + targetIp);
+              websocket.send("ping," + that.source + "," + targetIp);
             }, 1000);
           }
 
@@ -105,7 +102,7 @@ export default {
         })
       } else {
         this.$notify.error({
-          title: '配置错误',
+          title: 'ping错误',
           message: 'ip格式出现了问题',
           position: 'top-right',
           offset: 50
@@ -114,12 +111,9 @@ export default {
     }
   },
   computed: {
-    getSourceIp() {
+    getTargetIp() {
       return this.part1 + "." + this.part2 + "." + this.part3 + "." + this.part4;
     },
-    getTargetIp() {
-      return this.part5 + "." + this.part6 + "." + this.part7 + "." + this.part8;
-    }
   }
 }
 </script>
@@ -135,13 +129,17 @@ export default {
   width: 530px;
   flex-direction: column;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
 }
 
 .sourceIpArea {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
+}
+
+.sourceOption {
+  margin-top: 10px;
 }
 
 .targetIpArea {

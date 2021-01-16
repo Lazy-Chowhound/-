@@ -9,21 +9,21 @@
           <div class="configurationArea">
 
             <el-tabs class="tabs" type="border-card" :stretch="true">
-<!--              <el-tab-pane>-->
-<!--                <span slot="label"><i class="el-icon-s-tools"></i>路由器A</span>-->
-<!--                <ipcard name="路由器A"></ipcard>-->
-<!--              </el-tab-pane>-->
-<!--              <el-tab-pane>-->
-<!--                <span slot="label"><i class="el-icon-s-tools"></i>路由器B</span>-->
-<!--                <ipcard name="路由器B"></ipcard>-->
-<!--              </el-tab-pane>-->
               <el-tab-pane>
-                <span slot="label"><i class="el-icon-upload"></i>交换机</span>
-                <upload-card address=" "></upload-card>
+                <span slot="label"><i class="el-icon-upload2"></i>交换机</span>
+                <upload-card :address="'http://'+ip+'/uploadfile'"></upload-card>
               </el-tab-pane>
               <el-tab-pane>
-                <span slot="label"><i class="el-icon-upload"></i>中心路由器</span>
-                <upload-card address=" "></upload-card>
+                <span slot="label"><i class="el-icon-upload2"></i>RTA</span>
+                <upload-card :address="'http://'+ip+'/uploadfile'"></upload-card>
+              </el-tab-pane>
+              <el-tab-pane>
+                <span slot="label"><i class="el-icon-upload2"></i>RTB</span>
+                <upload-card :address="'http://'+ip+'/uploadfile'"></upload-card>
+              </el-tab-pane>
+              <el-tab-pane>
+                <span slot="label"><i class="el-icon-upload2"></i>RTC</span>
+                <upload-card :address="'http://'+ip+'/uploadfile'"></upload-card>
               </el-tab-pane>
             </el-tabs>
 
@@ -35,15 +35,27 @@
                     element-loading-text="拼命加载中"
                     element-loading-spinner="el-icon-loading"
                     element-loading-background="rgba(0, 0, 0, 0.8)">
-              <el-input type="textarea" ref="input" class="commandBoard" rows="20" v-model="command" resize="none"
+              <el-input id="text" type="textarea" ref="input" class="commandBoard" rows="20" v-model="command"
+                        resize="none"
                         v-on:keydown.delete.stop="banDelete($event)"></el-input>
             </el-row>
             <div class="buttonArea">
-              <el-button type="primary" v-on:click="sendCommand" icon="el-icon-thumb" :loading="loading">开始配置
+              <el-button type="primary" v-on:click="sendCommand('switch')" icon="el-icon-thumb" :loading="loading">配置交换机
               </el-button>
-              <el-button type="primary" v-on:click="ping" icon="el-icon-magic-stick" :loading="loading">ping
-              </el-button>
-              <el-button type="primary" v-on:click="down" icon="el-icon-sort-down" :loading="loading">down
+              <el-dropdown split-button type="primary" icon="el-icon-thumb" v-on:command="changeButton"
+                           v-on:click="sendCommand('router')">
+                配置{{ routerType }}
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item command="RTA">RTA</el-dropdown-item>
+                  <el-dropdown-item command="RTB">RTB</el-dropdown-item>
+                  <el-dropdown-item command="RTC">RTC</el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+              <el-popover trigger="click">
+                <ping-card v-bind:ip="ip" v-on:getPing="getPingResult"></ping-card>
+                <el-button type="primary" slot="reference" icon="el-icon-magic-stick">ping</el-button>
+              </el-popover>
+              <el-button type="primary" v-on:click="sendCommand('shutdown')" icon="el-icon-sort-down">{{ downOrOn }}
               </el-button>
               <el-button type="primary" v-on:click="clearAll" icon="el-icon-remove-outline">清除所有
               </el-button>
@@ -56,48 +68,59 @@
 </template>
 
 <script>
-// import ipcard from "@/components/ipCard";
 import uploadCard from "@/components/uploadCard";
-
+import pingCard from "@/components/pingCard";
 
 export default {
   name: "index",
   components: {
-    // ipcard,
+    pingCard,
     uploadCard
   },
   data() {
     return {
+      ip: "172.19.166.52:8080",
       show: true,
       loading: false,
       command: "",
-      // commandList: [
-      //   {command: "命令1"},
-      //   {command: "命令2"},
-      //   {command: "命令3"},
-      // ]
+      sourceIp: "",
+      targetIp: "",
+      routerType: "RTA",
+      downOrOn: "down",
     }
   },
   methods: {
     banDelete($event) {
       $event.preventDefault();
     },
-    sendCommand() {
-      const websocket = new WebSocket("ws://localhost:8090/socket");
+    changeButton(command) {
+      this.routerType = command;
+    },
+    sendCommand(type) {
+      const websocket = new WebSocket("ws://" + this.ip + "/gettelnet");
       const that = this;
+      this.loading = true;
 
       websocket.onopen = function () {
-        that.command = that.command.concat("正  在  配  置 , 请 稍 候\n\n");
+        that.loading = false;
+        if (type === 'switch')
+          that.command = that.command.concat("正  在  配  置").concat(" 交 换 机 , 请 稍 候\n\n");
+        else if (type === 'shutdown') {
+          that.command = that.command.concat("正 在 shutdown , 请 稍 候\n\n");
+          type = that.downOrOn;
+          that.downOrOn = (that.downOrOn === 'down' ? 'on' : 'down');
+        } else if (type === 'router') {
+          that.command = that.command.concat("正 在 配 置 " + that.routerType + " , 请稍候\n\n");
+          type = that.routerType
+        }
+
         setTimeout(() => {
-          that.command = that.command.concat("---------Loading---------\n\n");
-        }, 1000)
-        setTimeout(() => {
-          websocket.send("");
+          websocket.send(type);
         }, 1000);
       }
 
       websocket.onmessage = function (event) {
-        that.command = that.command.concat(event['data']).concat("\n")
+        that.command = that.command.concat(event['data']).concat("\n");
       }
 
       websocket.onclose = function () {
@@ -109,56 +132,16 @@ export default {
           title: '错误',
           message: 'websocket无法建立连接'
         });
+        that.loading = false;
       }
 
       window.onbeforeunload = function () {
         websocket.close();
       }
-
-      // this.loading = true;
-      // await this.$axios.get('http://localhost:8080/test', {timeout: 1000 * 60 * 60}).then(res => {
-      //   this.loading = false;
-      //   this.$notify({
-      //     title: '配置成功',
-      //     type: 'success',
-      //     offset: 50
-      //   });
-      //   this.command = this.command.concat(res.data['results']);
-      // }).catch(error => {
-      //   this.$message({
-      //     message: error,
-      //     type: 'error',
-      //     showClose: true
-      //   });
-      // })
     },
-    ping() {
-      this.$axios.get('', {timeout: 1000 * 60 * 60}).then(res => {
-        console.log(res);
-      }).catch(error => {
-        console.log(error);
-      })
+    getPingResult(data) {
+      this.command = this.command.concat(data).concat("\n");
     },
-    down() {
-      this.$axios.get('', {timeout: 1000 * 60 * 60}).then(res => {
-        console.log(res);
-      }).catch(error => {
-        console.log(error);
-      })
-    },
-    // /**
-    //  * 根据commandList里命令自动配置
-    //  * @returns {Promise<void>}
-    //  */
-    // async startConfigure() {
-    //   let i = 0;
-    //   for (i = 0; i < this.commandList.length; i++) {
-    //     const curCommand = this.commandList[i]["command"];
-    //     this.command = this.command.concat(curCommand).concat("\n");
-    //     await this.sendCommand();
-    //     this.command = this.command.concat("\n");
-    //   }
-    // },
     clearAll() {
       this.command = "";
       this.$notify({
@@ -221,6 +204,6 @@ export default {
   width: 600px;
   margin-top: 20px;
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
 }
 </style>
